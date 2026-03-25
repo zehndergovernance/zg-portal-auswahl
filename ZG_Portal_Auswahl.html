@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compliance Portal — Zehnder Governance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#07100a;--forest:#0b1f12;--pine:#132d1a;--moss:#245430;--sage:#357a45;--gold:#c08c28;--gold-l:#d4a94a;--border:rgba(192,140,40,.13);--radius:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--ink);color:#fff;font-family:'Outfit',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.wrap{max-width:640px;width:100%;text-align:center;}
+.logo{display:inline-flex;align-items:center;gap:10px;margin-bottom:40px;}
+.lm{width:40px;height:40px;border-radius:10px;background:linear-gradient(145deg,var(--moss),var(--pine));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--gold);}
+.ln{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:#fff;letter-spacing:.05em;}.ln em{color:var(--gold);font-style:normal;}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-weight:600;color:#fff;margin-bottom:10px;}
+.sub{font-size:14px;color:rgba(255,255,255,.45);margin-bottom:40px;line-height:1.6;font-weight:300;}
+.portal-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:32px;}
+.portal-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px;transition:all .25s;cursor:pointer;text-decoration:none;}
+.portal-card:hover{border-color:rgba(192,140,40,.35);background:rgba(255,255,255,.07);transform:translateY(-2px);}
+.portal-card.gold{border-color:rgba(192,140,40,.2);background:rgba(192,140,40,.05);}
+.portal-card.gold:hover{border-color:rgba(192,140,40,.5);background:rgba(192,140,40,.1);}
+.pc-left{display:flex;align-items:center;gap:14px;text-align:left;}
+.pc-icon{font-size:28px;flex-shrink:0;}
+.pc-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:3px;}
+.pc-label.gold-label{color:var(--gold);}
+.pc-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:2px;}
+.pc-desc{font-size:12px;color:rgba(255,255,255,.4);line-height:1.4;}
+.pc-arrow{font-size:18px;color:rgba(255,255,255,.3);flex-shrink:0;transition:all .2s;}
+.portal-card:hover .pc-arrow{color:var(--gold);transform:translateX(4px);}
+.divider{border:none;border-top:1px solid rgba(255,255,255,.06);margin:24px 0;}
+.new-customer{font-size:13px;color:rgba(255,255,255,.35);line-height:1.7;}
+.new-customer a{color:var(--gold);}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.3);margin-top:24px;transition:color .2s;}
+.back:hover{color:rgba(255,255,255,.7);}
+@media(max-width:480px){.portal-card{flex-direction:column;align-items:flex-start;}.pc-arrow{display:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="lm">Z</div>
+    <div class="ln">ZEHNDER <em>GOVERNANCE</em></div>
+  </div>
+
+  <h1>Ihr Compliance Portal</h1>
+  <p class="sub">Wählen Sie Ihr Portal um sich einzuloggen. Nach dem Kauf erhalten Sie per E-Mail einen Link zum Einrichten Ihres Passworts.</p>
+
+  <div class="portal-grid">
+
+    <a href="https://zg-portal-flatrate.vercel.app" class="portal-card">
+      <div class="pc-left">
+        <div class="pc-icon">📚</div>
+        <div>
+          <div class="pc-label">CHF 149 / Monat</div>
+          <div class="pc-title">Compliance Flatrate Standard</div>
+          <div class="pc-desc">130+ Vorlagen, 11 Schulungsmodule, TIA-Dokumente, AI Tracker</div>
+        </div>
+      </div>
+      <div class="pc-arrow">→</div>
+    </a>
+
+    <a href="https://zg-portal-enterprise.vercel.app" class="portal-card gold">
+      <div class="pc-left">
+        <div class="pc-icon">⭐</div>
+        <div>
+          <div class="pc-label gold-label">CHF 299 / Monat — Empfohlen</div>
+          <div class="pc-title">Compliance Flatrate Enterprise</div>
+          <div class="pc-desc">Alles aus Standard + Regulatory Radar, Audit-Check, Priority Support 24h</div>
+        </div>
+      </div>
+      <div class="pc-arrow">→</div>
+    </a>
+
+    <a href="https://zg-portal-navigator.vercel.app" class="portal-card">
+      <div class="pc-left">
+        <div class="pc-icon">🧭</div>
+        <div>
+          <div class="pc-label">CHF 490 einmalig</div>
+          <div class="pc-title">Compliance Navigator</div>
+          <div class="pc-desc">Vollständige Unternehmensanalyse, 13 Jurisdiktionen, PDF-Report</div>
+        </div>
+      </div>
+      <div class="pc-arrow">→</div>
+    </a>
+
+    <a href="https://zg-country-intelligence.vercel.app" class="portal-card">
+      <div class="pc-left">
+        <div class="pc-icon">🌍</div>
+        <div>
+          <div class="pc-label">CHF 99 / Monat</div>
+          <div class="pc-title">Transfer Impact Modul</div>
+          <div class="pc-desc">Country Intelligence, TIA-Vorlagen, 13 Länder-Risikoprofile</div>
+        </div>
+      </div>
+      <div class="pc-arrow">→</div>
+    </a>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="new-customer">
+    Noch kein Abonnement? <a href="https://buy.stripe.com/9B6bIT5hc5BLeap7Zm5Rm00">Jetzt abonnieren →</a><br>
+    <span style="color:rgba(255,255,255,.2);font-size:11px;margin-top:6px;display:block;">Bei Fragen: zehndergovernance@gmail.com</span>
+  </div>
+
+  <a href="https://zehndergovernance.com" class="back">← Zurück zur Website</a>
+</div>
+</body>
+</html>
