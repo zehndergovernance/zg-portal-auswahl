@@ -6,6 +6,7 @@
 <title>Compliance Portal — Zehnder Governance</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{--ink:#07100a;--forest:#0b1f12;--pine:#132d1a;--moss:#245430;--sage:#357a45;--gold:#c08c28;--gold-l:#d4a94a;--border:rgba(192,140,40,.13);--radius:14px;}
 *{box-sizing:border-box;margin:0;padding:0;}
@@ -35,11 +36,84 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
 .new-customer a{color:var(--gold);}
 .back{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.3);margin-top:24px;transition:color .2s;text-decoration:none;}
 .back:hover{color:rgba(255,255,255,.7);}
-@media(max-width:480px){.portal-card{flex-direction:column;align-items:flex-start;}.pc-arrow{display:none;}}
+
+/* ===== AUTH HEADER (visible in states B+C) ===== */
+.auth-header{width:100%;max-width:640px;margin:0 auto 24px;padding:10px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;align-items:center;gap:12px;justify-content:space-between;display:none;}
+.auth-header.show{display:flex;}
+.auth-header-email{font-size:12px;color:rgba(255,255,255,.5);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto;min-width:0;text-align:left;}
+.auth-header-email b{color:rgba(255,255,255,.75);font-weight:500;}
+.auth-logout{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);background:transparent;border:1px solid rgba(192,140,40,.3);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:'Outfit',sans-serif;flex-shrink:0;transition:all .2s;}
+.auth-logout:hover{background:rgba(192,140,40,.1);border-color:var(--gold);}
+
+/* ===== SPINNER (initial check) ===== */
+.auth-spinner{padding:40px 0;text-align:center;display:none;}
+.auth-spinner.show{display:block;}
+.spinner{display:inline-block;width:32px;height:32px;border:3px solid rgba(192,140,40,.18);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ===== AUTH BOX (login + reset) ===== */
+.auth-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:28px;text-align:left;margin-bottom:8px;display:none;}
+.auth-box.show{display:block;}
+.auth-box h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:6px;text-align:center;}
+.auth-box p.intro{font-size:13px;color:rgba(255,255,255,.45);text-align:center;margin-bottom:20px;line-height:1.5;}
+.auth-row{margin-bottom:12px;}
+.auth-input{width:100%;padding:12px 14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
+.auth-input:focus{border-color:var(--gold);}
+.auth-input::placeholder{color:rgba(255,255,255,.3);}
+.auth-submit{width:100%;padding:13px;background:linear-gradient(145deg,var(--gold),var(--gold-l));border:none;border-radius:8px;color:#1a1208;font-family:'Outfit',sans-serif;font-weight:600;font-size:14px;letter-spacing:.04em;cursor:pointer;margin-top:6px;transition:opacity .2s;}
+.auth-submit:hover{opacity:.92;}
+.auth-submit:disabled{opacity:.55;cursor:wait;}
+.auth-msg{margin-top:12px;padding:9px 12px;border-radius:6px;font-size:12px;line-height:1.45;display:none;}
+.auth-msg.show{display:block;}
+.auth-msg.error{background:rgba(220,80,80,.12);border:1px solid rgba(220,80,80,.3);color:#f5b3b3;}
+.auth-msg.success{background:rgba(80,170,100,.1);border:1px solid rgba(80,170,100,.25);color:#b3dab8;}
+.auth-links{display:flex;flex-direction:column;gap:10px;margin-top:16px;text-align:center;font-size:12px;}
+.auth-links button.linklike{color:var(--gold);background:transparent;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-size:12px;text-decoration:none;padding:0;}
+.auth-links button.linklike:hover{text-decoration:underline;}
+.auth-links .muted{color:rgba(255,255,255,.4);font-size:12px;}
+.auth-links .muted a{color:var(--gold);text-decoration:none;}
+.auth-links .muted a:hover{text-decoration:underline;}
+.auth-mini-divider{height:1px;background:rgba(255,255,255,.06);margin:14px 0 4px;}
+
+/* ===== NO ACCESS BOX (state C) ===== */
+.noaccess-box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--radius);padding:32px 28px;text-align:center;display:none;}
+.noaccess-box.show{display:block;}
+.noaccess-box h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#fff;margin-bottom:8px;}
+.noaccess-box p{font-size:13px;color:rgba(255,255,255,.5);line-height:1.6;margin-bottom:18px;}
+.noaccess-box a.btn{display:inline-block;padding:10px 18px;background:rgba(192,140,40,.1);border:1px solid rgba(192,140,40,.35);border-radius:8px;color:var(--gold);text-decoration:none;font-size:13px;font-weight:500;}
+.noaccess-box a.btn:hover{background:rgba(192,140,40,.18);}
+
+/* ===== CARDS AREA (state B) ===== */
+.cards-area{display:none;}
+.cards-area.show{display:block;}
+.section{display:block;}
+.section.hidden{display:none;}
+
+/* ===== AI TRACKER NOTE (state B) ===== */
+.ai-tracker-note{margin-top:20px;padding:14px 18px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.05);border-radius:10px;font-size:12px;color:rgba(255,255,255,.45);text-align:center;line-height:1.55;display:none;}
+.ai-tracker-note.show{display:block;}
+.ai-tracker-note a{color:var(--gold);text-decoration:none;}
+.ai-tracker-note a:hover{text-decoration:underline;}
+
+@media(max-width:480px){
+  .portal-card{flex-direction:column;align-items:flex-start;}
+  .pc-arrow{display:none;}
+  .auth-header{padding:9px 12px;}
+  .auth-header-email{font-size:11px;}
+  .auth-logout{font-size:10px;padding:5px 10px;}
+  .auth-box{padding:22px 18px;}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
+
+  <!-- AUTH HEADER (Zustand B + C) -->
+  <div id="authHeader" class="auth-header">
+    <div class="auth-header-email">Hallo <b id="authEmailLabel"></b></div>
+    <button type="button" class="auth-logout" onclick="doLogout()">Logout</button>
+  </div>
+
   <div class="logo">
     <div class="lm">Z</div>
     <div class="ln">ZEHNDER <em>GOVERNANCE</em></div>
@@ -48,116 +122,348 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
   <h1>Ihr Compliance Portal</h1>
   <p class="sub">Wählen Sie Ihr Portal um sich einzuloggen. Nach dem Kauf erhalten Sie per E-Mail einen Link zum Einrichten Ihres Passworts.</p>
 
-  <!-- ABONNEMENTS -->
-  <div class="section-label">Abonnements</div>
-  <div class="portal-grid">
+  <!-- INITIAL SPINNER -->
+  <div id="authSpinner" class="auth-spinner show"><div class="spinner"></div></div>
 
-    <a href="https://zg-portal-flatrate.vercel.app" class="portal-card">
-      <div class="pc-left">
-        <div class="pc-icon">📚</div>
-        <div>
-          <div class="pc-label">CHF 149 / Monat</div>
-          <div class="pc-title">Compliance Flatrate Standard</div>
-          <div class="pc-desc">130+ Vorlagen, Schulungsmodule, TIA-Dokumente, AI Tracker</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
-    <a href="https://zg-portal-enterprise.vercel.app" class="portal-card gold">
-      <div class="pc-left">
-        <div class="pc-icon">⭐</div>
-        <div>
-          <div class="pc-label gold-label">CHF 299 / Monat — Empfohlen</div>
-          <div class="pc-title">Compliance Flatrate Enterprise</div>
-          <div class="pc-desc">Alles aus Standard + Regulatory Radar, Audit-Check, Priority Support 24h</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
+  <!-- LOGIN BOX (Zustand A) -->
+  <div id="loginBox" class="auth-box">
+    <h2>Anmelden</h2>
+    <p class="intro">Geben Sie Ihre E-Mail und Ihr Passwort ein, um auf Ihre Portale zuzugreifen.</p>
+    <div class="auth-row"><input id="loginEmail" class="auth-input" type="email" placeholder="E-Mail" autocomplete="email" required></div>
+    <div class="auth-row"><input id="loginPass" class="auth-input" type="password" placeholder="Passwort" autocomplete="current-password" required></div>
+    <button id="loginBtn" type="button" class="auth-submit" onclick="doLogin()">Einloggen</button>
+    <div id="loginMsg" class="auth-msg"></div>
+    <div class="auth-links">
+      <button type="button" class="linklike" onclick="showResetBox()">Passwort vergessen?</button>
+      <div class="auth-mini-divider"></div>
+      <div class="muted">Noch kein Kunde? <a href="https://zehndergovernance.com/#products">Produkte ansehen →</a></div>
+      <div class="muted" style="font-size:11px;color:rgba(255,255,255,.25);">Bei Fragen: zehndergovernance@gmail.com</div>
+    </div>
   </div>
 
-  <!-- EINZELPRODUKTE -->
-  <div class="section-label">Einzelprodukte</div>
-  <div class="portal-grid">
-
-    <a href="https://zg-portal-navigator.vercel.app" class="portal-card">
-      <div class="pc-left">
-        <div class="pc-icon">🧭</div>
-        <div>
-          <div class="pc-label">CHF 490 einmalig</div>
-          <div class="pc-title">Compliance Navigator</div>
-          <div class="pc-desc">Vollständige Unternehmensanalyse, 13 Jurisdiktionen, PDF-Report</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
-    <a href="https://zg-country-intelligence.vercel.app" class="portal-card">
-      <div class="pc-left">
-        <div class="pc-icon">🌍</div>
-        <div>
-          <div class="pc-label">CHF 299 einmalig</div>
-          <div class="pc-title">Transfer Impact Modul</div>
-          <div class="pc-desc">Country Intelligence, TIA-Vorlagen, 13 Länder-Risikoprofile</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
+  <!-- RESET BOX (Sub-Zustand von A) -->
+  <div id="resetBox" class="auth-box">
+    <h2>Passwort zurücksetzen</h2>
+    <p class="intro">Geben Sie Ihre E-Mail ein. Wir senden Ihnen einen Link um Ihr Passwort neu zu setzen.</p>
+    <div class="auth-row"><input id="resetEmail" class="auth-input" type="email" placeholder="E-Mail" autocomplete="email" required></div>
+    <button id="resetBtn" type="button" class="auth-submit" onclick="doForgotPassword()">Reset-Link senden</button>
+    <div id="resetMsg" class="auth-msg"></div>
+    <div class="auth-links">
+      <button type="button" class="linklike" onclick="showLoginBox()">← Zurück zum Login</button>
+    </div>
   </div>
 
-  <!-- RESSOURCEN -->
-  <div class="section-label">Ressourcen</div>
-  <div class="portal-grid">
-
-    <a href="https://zg-schulungen.vercel.app" class="portal-card">
-      <div class="pc-left">
-        <div class="pc-icon">🎓</div>
-        <div>
-          <div class="pc-label">Im Flatrate inklusive</div>
-          <div class="pc-title">Datenschutz & KI Schulung</div>
-          <div class="pc-desc">M01–M13 Kernmodule, Ländermodule CH/UK/USA/CN, EU AI Act, Zertifikat</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
-    <a href="https://zg-template-bibliothek.vercel.app" class="portal-card">
-      <div class="pc-left">
-        <div class="pc-icon">📋</div>
-        <div>
-          <div class="pc-label">Im Flatrate inklusive</div>
-          <div class="pc-title">Template-Bibliothek</div>
-          <div class="pc-desc">130+ Vorlagen — AVV, TIA, Datenschutzhinweise, Schulungen, DPIA</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
-    <a href="https://zg-regulatory-radar-html.vercel.app" class="portal-card">
-      <div class="pc-left">
-        <div class="pc-icon">📡</div>
-        <div>
-          <div class="pc-label">CHF 149/Jahr · Im Enterprise inklusive</div>
-          <div class="pc-title">Regulatory Radar</div>
-          <div class="pc-desc">Quarterly Reports DE+EN, 13 Jurisdiktionen, Handlungsempfehlungen</div>
-        </div>
-      </div>
-      <div class="pc-arrow">→</div>
-    </a>
-
+  <!-- NO ACCESS BOX (Zustand C) -->
+  <div id="noAccessBox" class="noaccess-box">
+    <h2>Keine aktiven Leistungen</h2>
+    <p>Sie sind angemeldet, haben aktuell aber keine aktiven Abonnements oder Einzelprodukte. Sobald Sie ein Produkt erwerben, erscheint es hier.</p>
+    <a href="https://zehndergovernance.com/#products" class="btn">Produkte ansehen →</a>
   </div>
 
-  <div class="divider"></div>
+  <!-- CARDS AREA (Zustand B) -->
+  <div id="cardsArea" class="cards-area">
 
-  <div class="new-customer">
-    Noch kein Abonnement? <a href="https://zehndergovernance.com/#products">Produkte ansehen →</a><br>
-    <span style="color:rgba(255,255,255,.2);font-size:11px;margin-top:6px;display:block;">Bei Fragen: zehndergovernance@gmail.com</span>
+    <!-- ABONNEMENTS -->
+    <div class="section" data-section="abos">
+      <div class="section-label">Abonnements</div>
+      <div class="portal-grid">
+
+        <a href="https://zg-portal-flatrate.vercel.app" class="portal-card" data-card-id="flatrate-std">
+          <div class="pc-left">
+            <div class="pc-icon">📚</div>
+            <div>
+              <div class="pc-label">CHF 149 / Monat</div>
+              <div class="pc-title">Compliance Flatrate Standard</div>
+              <div class="pc-desc">130+ Vorlagen, Schulungsmodule, TIA-Dokumente, AI Tracker</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+        <a href="https://zg-portal-enterprise.vercel.app" class="portal-card gold" data-card-id="flatrate-ent">
+          <div class="pc-left">
+            <div class="pc-icon">⭐</div>
+            <div>
+              <div class="pc-label gold-label">CHF 299 / Monat — Empfohlen</div>
+              <div class="pc-title">Compliance Flatrate Enterprise</div>
+              <div class="pc-desc">Alles aus Standard + Regulatory Radar, Audit-Check, Priority Support 24h</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- EINZELPRODUKTE -->
+    <div class="section" data-section="einzel">
+      <div class="section-label">Einzelprodukte</div>
+      <div class="portal-grid">
+
+        <a href="https://zg-portal-navigator.vercel.app" class="portal-card" data-card-id="navigator">
+          <div class="pc-left">
+            <div class="pc-icon">🧭</div>
+            <div>
+              <div class="pc-label">CHF 490 einmalig</div>
+              <div class="pc-title">Compliance Navigator</div>
+              <div class="pc-desc">Vollständige Unternehmensanalyse, 13 Jurisdiktionen, PDF-Report</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+        <a href="https://zg-country-intelligence.vercel.app" class="portal-card" data-card-id="tia">
+          <div class="pc-left">
+            <div class="pc-icon">🌍</div>
+            <div>
+              <div class="pc-label">CHF 299 einmalig</div>
+              <div class="pc-title">Transfer Impact Modul</div>
+              <div class="pc-desc">Country Intelligence, TIA-Vorlagen, 13 Länder-Risikoprofile</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- RESSOURCEN -->
+    <div class="section" data-section="ressourcen">
+      <div class="section-label">Ressourcen</div>
+      <div class="portal-grid">
+
+        <a href="https://zg-schulungen.vercel.app" class="portal-card" data-card-id="schulungen">
+          <div class="pc-left">
+            <div class="pc-icon">🎓</div>
+            <div>
+              <div class="pc-label">Im Flatrate inklusive</div>
+              <div class="pc-title">Datenschutz & KI Schulung</div>
+              <div class="pc-desc">M01–M13 Kernmodule, Ländermodule CH/UK/USA/CN, EU AI Act, Zertifikat</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+        <a href="https://zg-template-bibliothek.vercel.app" class="portal-card" data-card-id="templates">
+          <div class="pc-left">
+            <div class="pc-icon">📋</div>
+            <div>
+              <div class="pc-label">Im Flatrate inklusive</div>
+              <div class="pc-title">Template-Bibliothek</div>
+              <div class="pc-desc">130+ Vorlagen — AVV, TIA, Datenschutzhinweise, Schulungen, DPIA</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+        <a href="https://zg-regulatory-radar-html.vercel.app" class="portal-card" data-card-id="radar">
+          <div class="pc-left">
+            <div class="pc-icon">📡</div>
+            <div>
+              <div class="pc-label">CHF 149/Jahr · Im Enterprise inklusive</div>
+              <div class="pc-title">Regulatory Radar</div>
+              <div class="pc-desc">Quarterly Reports DE+EN, 13 Jurisdiktionen, Handlungsempfehlungen</div>
+            </div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+      </div>
+    </div>
+
+    <!-- AI TRACKER NOTE -->
+    <div id="aiTrackerNote" class="ai-tracker-note">
+      Tipp: Den kostenlosen <a href="https://zehndergovernance.com/#ai-tracker">AI Impact Tracker</a> finden Sie auf der Hauptseite.
+    </div>
+
   </div>
 
   <a href="https://zehndergovernance.com" class="back">← Zurück zur Website</a>
 </div>
+
+<script>
+const SUPABASE_URL='https://rjvdmyjuqtchznlhffzo.supabase.co';
+const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJqdmRteWp1cXRjaHpubGhmZnpvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEzNTkzNDksImV4cCI6MjA4NjkzNTM0OX0.iJWzPFxAI-ms7qCD6s0-Sxuqksy0ix1X-l1uNmxCZu0';
+const SELF_URL='https://zg-portal-auswahl.vercel.app';
+
+// Plan → Karten-IDs (Vereinigung bei Multi-Plan)
+const PLAN_ACCESS={
+  standard:   ['flatrate-std','templates','schulungen','tia'],
+  enterprise: ['flatrate-std','flatrate-ent','templates','schulungen','tia','radar'],
+  navigator:  ['navigator'],
+  tia:        ['tia'],
+  radar:      ['radar']
+};
+
+const {createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+// ===== UI helpers =====
+function hideAll(){
+  ['authSpinner','loginBox','resetBox','noAccessBox','cardsArea','aiTrackerNote','authHeader']
+    .forEach(id=>document.getElementById(id).classList.remove('show'));
+}
+function show(id){document.getElementById(id).classList.add('show');}
+function showHeader(email){
+  document.getElementById('authEmailLabel').textContent=email;
+  show('authHeader');
+}
+function showLoginBox(){
+  hideAll();
+  show('loginBox');
+  clearMsg('loginMsg');
+}
+function showResetBox(){
+  hideAll();
+  show('resetBox');
+  clearMsg('resetMsg');
+  const e=document.getElementById('loginEmail').value.trim();
+  if(e) document.getElementById('resetEmail').value=e;
+}
+function setMsg(id,text,type){
+  const el=document.getElementById(id);
+  el.textContent=text;
+  el.className='auth-msg show '+(type||'');
+}
+function clearMsg(id){
+  const el=document.getElementById(id);
+  el.textContent='';
+  el.className='auth-msg';
+}
+
+// ===== Card filtering =====
+function applyCardFilter(myPlans){
+  const allowed=new Set();
+  myPlans.forEach(p=>{
+    const ids=PLAN_ACCESS[p]||[];
+    ids.forEach(id=>allowed.add(id));
+  });
+  document.querySelectorAll('.portal-card[data-card-id]').forEach(card=>{
+    card.style.display=allowed.has(card.dataset.cardId)?'':'none';
+  });
+  document.querySelectorAll('.section').forEach(sec=>{
+    const cards=sec.querySelectorAll('.portal-card[data-card-id]');
+    const anyVisible=Array.from(cards).some(c=>c.style.display!=='none');
+    sec.classList.toggle('hidden',!anyVisible);
+  });
+  return allowed.size;
+}
+
+// ===== Auth flow =====
+async function init(){
+  try{
+    const {data:{session},error}=await sb.auth.getSession();
+    if(error) throw error;
+    if(session){
+      await checkAccess(session.user);
+    } else {
+      showLoginBox();
+    }
+  } catch(e){
+    console.error('init error',e);
+    showLoginBox();
+    setMsg('loginMsg','Verbindungsproblem, bitte erneut versuchen.','error');
+  }
+}
+
+async function checkAccess(user){
+  try{
+    const {data,error}=await sb
+      .from('user_subscriptions')
+      .select('plan,status')
+      .eq('user_id',user.id)
+      .eq('status','active');
+    if(error) throw error;
+    const myPlans=(data||[]).map(r=>r.plan).filter(Boolean);
+    hideAll();
+    showHeader(user.email);
+    if(myPlans.length===0){
+      show('noAccessBox');
+      return;
+    }
+    const visible=applyCardFilter(myPlans);
+    if(visible===0){
+      show('noAccessBox');
+    } else {
+      show('cardsArea');
+      show('aiTrackerNote');
+    }
+  } catch(e){
+    console.error('checkAccess error',e);
+    showLoginBox();
+    setMsg('loginMsg','Verbindungsproblem, bitte erneut versuchen.','error');
+  }
+}
+
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPass').value;
+  const btn=document.getElementById('loginBtn');
+  clearMsg('loginMsg');
+  if(!email||!password){
+    setMsg('loginMsg','Bitte E-Mail und Passwort eingeben.','error');
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent='Wird geladen…';
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password});
+    if(error){
+      setMsg('loginMsg','E-Mail oder Passwort falsch.','error');
+      btn.disabled=false;
+      btn.textContent='Einloggen';
+      return;
+    }
+    await checkAccess(data.user);
+  } catch(e){
+    console.error('login error',e);
+    setMsg('loginMsg','Verbindungsproblem, bitte erneut versuchen.','error');
+    btn.disabled=false;
+    btn.textContent='Einloggen';
+  }
+}
+
+async function doForgotPassword(){
+  const email=document.getElementById('resetEmail').value.trim();
+  const btn=document.getElementById('resetBtn');
+  clearMsg('resetMsg');
+  if(!email){
+    setMsg('resetMsg','Bitte E-Mail eingeben.','error');
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent='Wird geladen…';
+  try{
+    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:SELF_URL});
+    if(error) throw error;
+    setMsg('resetMsg','E-Mail mit Reset-Link wurde gesendet (sofern ein Konto zu dieser Adresse existiert). Bitte Posteingang prüfen.','success');
+    btn.disabled=false;
+    btn.textContent='Erneut senden';
+  } catch(e){
+    console.error('reset error',e);
+    setMsg('resetMsg','Verbindungsproblem, bitte erneut versuchen.','error');
+    btn.disabled=false;
+    btn.textContent='Reset-Link senden';
+  }
+}
+
+async function doLogout(){
+  try{
+    await sb.auth.signOut();
+  } catch(e){
+    console.error('logout error',e);
+  }
+  location.reload();
+}
+
+// Enter-Key in Login + Reset
+document.addEventListener('keydown',e=>{
+  if(e.key!=='Enter') return;
+  if(document.getElementById('loginBox').classList.contains('show')) doLogin();
+  else if(document.getElementById('resetBox').classList.contains('show')) doForgotPassword();
+});
+
+init();
+</script>
 </body>
 </html>
