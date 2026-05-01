@@ -514,11 +514,21 @@ async function doRecovery(){
     },3000);
   } catch(e){
     console.error('recovery error',e);
-    const msg=(e&&e.message&&/expired|invalid|jwt|token/i.test(e.message))
-      ?'Reset-Link ungültig oder abgelaufen. Bitte neuen Link anfordern.'
-      :'Passwort konnte nicht gesetzt werden. Bitte erneut versuchen.';
-    setMsg('recoveryMsg',msg,'error');
-    document.getElementById('recoveryBackBtn').style.display='';
+    const errMsg=(e&&e.message)||'';
+    let displayMsg, showBackBtn;
+    if(/different/i.test(errMsg)){
+      // Supabase: "New password should be different from old"
+      displayMsg='Das neue Passwort darf nicht gleich dem alten Passwort sein. Bitte wählen Sie ein anderes Passwort.';
+      showBackBtn=false;
+    } else if(/expired|invalid|jwt|token/i.test(errMsg)){
+      displayMsg='Reset-Link ungültig oder abgelaufen. Bitte neuen Link anfordern.';
+      showBackBtn=true;
+    } else {
+      displayMsg='Passwort konnte nicht gesetzt werden. Bitte erneut versuchen.';
+      showBackBtn=true;
+    }
+    setMsg('recoveryMsg',displayMsg,'error');
+    document.getElementById('recoveryBackBtn').style.display=showBackBtn?'':'none';
     btn.disabled=false;
     btn.textContent='Passwort speichern';
   }
