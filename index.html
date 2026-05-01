@@ -153,6 +153,19 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
     </div>
   </div>
 
+  <!-- RECOVERY BOX (Sub-Zustand A nach Klick auf Reset-Email-Link) -->
+  <div id="recoveryBox" class="auth-box">
+    <h2>Neues Passwort setzen</h2>
+    <p class="intro">Bitte geben Sie Ihr neues Passwort zweimal ein.</p>
+    <div class="auth-row"><input id="newPass1" class="auth-input" type="password" placeholder="Neues Passwort" autocomplete="new-password" required></div>
+    <div class="auth-row"><input id="newPass2" class="auth-input" type="password" placeholder="Passwort bestätigen" autocomplete="new-password" required></div>
+    <button id="recoveryBtn" type="button" class="auth-submit" onclick="doRecovery()">Passwort speichern</button>
+    <div id="recoveryMsg" class="auth-msg"></div>
+    <div class="auth-links">
+      <button type="button" class="linklike" id="recoveryBackBtn" onclick="recoveryBackToReset()" style="display:none;">← Neuen Reset-Link anfordern</button>
+    </div>
+  </div>
+
   <!-- NO ACCESS BOX (Zustand C) -->
   <div id="noAccessBox" class="noaccess-box">
     <h2>Keine aktiven Leistungen</h2>
@@ -300,7 +313,7 @@ const sb=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 // ===== UI helpers =====
 function hideAll(){
-  ['authSpinner','loginBox','resetBox','noAccessBox','cardsArea','aiTrackerNote','authHeader']
+  ['authSpinner','loginBox','resetBox','recoveryBox','noAccessBox','cardsArea','aiTrackerNote','authHeader']
     .forEach(id=>document.getElementById(id).classList.remove('show'));
 }
 function show(id){document.getElementById(id).classList.add('show');}
@@ -319,6 +332,19 @@ function showResetBox(){
   clearMsg('resetMsg');
   const e=document.getElementById('loginEmail').value.trim();
   if(e) document.getElementById('resetEmail').value=e;
+}
+function showRecoveryForm(){
+  hideAll();
+  show('recoveryBox');
+  clearMsg('recoveryMsg');
+  document.getElementById('newPass1').value='';
+  document.getElementById('newPass2').value='';
+  document.getElementById('recoveryBackBtn').style.display='none';
+  setTimeout(()=>{try{document.getElementById('newPass1').focus();}catch(_){}},50);
+}
+function recoveryBackToReset(){
+  history.replaceState(null,'',location.pathname);
+  showResetBox();
 }
 function setMsg(id,text,type){
   const el=document.getElementById(id);
@@ -352,6 +378,13 @@ function applyCardFilter(myPlans){
 // ===== Auth flow =====
 async function init(){
   try{
+    // Recovery-Mode: Reset-Email-Link bringt #type=recovery&access_token=... mit
+    const hash=window.location.hash.startsWith('#')?window.location.hash.slice(1):window.location.hash;
+    const params=new URLSearchParams(hash);
+    if(params.get('type')==='recovery' && params.get('access_token')){
+      showRecoveryForm();
+      return;
+    }
     const {data:{session},error}=await sb.auth.getSession();
     if(error) throw error;
     if(session){
@@ -447,6 +480,50 @@ async function doForgotPassword(){
   }
 }
 
+async function doRecovery(){
+  const p1=document.getElementById('newPass1').value;
+  const p2=document.getElementById('newPass2').value;
+  const btn=document.getElementById('recoveryBtn');
+  clearMsg('recoveryMsg');
+  document.getElementById('recoveryBackBtn').style.display='none';
+  if(!p1||!p2){
+    setMsg('recoveryMsg','Bitte beide Felder ausfüllen.','error');
+    return;
+  }
+  if(p1.length<8){
+    setMsg('recoveryMsg','Passwort muss mindestens 8 Zeichen haben.','error');
+    return;
+  }
+  if(p1!==p2){
+    setMsg('recoveryMsg','Die beiden Passwörter stimmen nicht überein.','error');
+    return;
+  }
+  btn.disabled=true;
+  btn.textContent='Wird gespeichert…';
+  try{
+    const {data,error}=await sb.auth.updateUser({password:p1});
+    if(error) throw error;
+    setMsg('recoveryMsg','Passwort erfolgreich gesetzt. Sie werden in 3 Sekunden zur Anmeldung weitergeleitet.','success');
+    const userEmail=data?.user?.email||'';
+    setTimeout(async ()=>{
+      try{ await sb.auth.signOut(); }catch(_){}
+      history.replaceState(null,'',location.pathname);
+      showLoginBox();
+      if(userEmail) document.getElementById('loginEmail').value=userEmail;
+      setMsg('loginMsg','Passwort gesetzt. Bitte mit neuem Passwort einloggen.','success');
+    },3000);
+  } catch(e){
+    console.error('recovery error',e);
+    const msg=(e&&e.message&&/expired|invalid|jwt|token/i.test(e.message))
+      ?'Reset-Link ungültig oder abgelaufen. Bitte neuen Link anfordern.'
+      :'Passwort konnte nicht gesetzt werden. Bitte erneut versuchen.';
+    setMsg('recoveryMsg',msg,'error');
+    document.getElementById('recoveryBackBtn').style.display='';
+    btn.disabled=false;
+    btn.textContent='Passwort speichern';
+  }
+}
+
 async function doLogout(){
   try{
     await sb.auth.signOut();
@@ -456,11 +533,12 @@ async function doLogout(){
   location.reload();
 }
 
-// Enter-Key in Login + Reset
+// Enter-Key in Login + Reset + Recovery
 document.addEventListener('keydown',e=>{
   if(e.key!=='Enter') return;
   if(document.getElementById('loginBox').classList.contains('show')) doLogin();
   else if(document.getElementById('resetBox').classList.contains('show')) doForgotPassword();
+  else if(document.getElementById('recoveryBox').classList.contains('show')) doRecovery();
 });
 
 init();
