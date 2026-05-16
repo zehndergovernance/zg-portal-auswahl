@@ -129,9 +129,11 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
   <div id="loginBox" class="auth-box">
     <h2>Anmelden</h2>
     <p class="intro">Geben Sie Ihre E-Mail und Ihr Passwort ein, um auf Ihre Portale zuzugreifen.</p>
-    <div class="auth-row"><input id="loginEmail" class="auth-input" type="email" placeholder="E-Mail" autocomplete="email" required></div>
-    <div class="auth-row"><input id="loginPass" class="auth-input" type="password" placeholder="Passwort" autocomplete="current-password" required></div>
-    <button id="loginBtn" type="button" class="auth-submit" onclick="doLogin()">Einloggen</button>
+    <form onsubmit="event.preventDefault();doLogin();return false;" autocomplete="on">
+    <div class="auth-row"><input id="loginEmail" name="email" class="auth-input" type="email" placeholder="E-Mail" autocomplete="email" required></div>
+    <div class="auth-row"><input id="loginPass" name="password" class="auth-input" type="password" placeholder="Passwort" autocomplete="current-password" required></div>
+    <button id="loginBtn" type="submit" class="auth-submit">Einloggen</button>
+    </form>
     <div id="loginMsg" class="auth-msg"></div>
     <div class="auth-links">
       <button type="button" class="linklike" onclick="showResetBox()">Passwort vergessen?</button>
@@ -175,6 +177,11 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
 
   <!-- CARDS AREA (Zustand B) -->
   <div id="cardsArea" class="cards-area">
+
+    <!-- HINWEIS Cross-Portal-Login -->
+    <div class="login-hint" style="background:rgba(192,140,40,.08);border-left:3px solid #c08c28;border-radius:0 8px 8px 0;padding:10px 14px;margin:0 0 18px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.55;">
+      ℹ️ Sie loggen sich pro Portal einmalig ein — danach bleibt der Zugang in Ihrem Browser gespeichert. Bei Browser-Wechsel oder Inkognito-Tab ist erneute Anmeldung nötig.
+    </div>
 
     <!-- ABONNEMENTS -->
     <div class="section" data-section="abos">
