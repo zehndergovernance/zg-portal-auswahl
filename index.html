@@ -58,6 +58,9 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
 .auth-box p.intro{font-size:13px;color:rgba(255,255,255,.45);text-align:center;margin-bottom:20px;line-height:1.5;}
 .auth-row{margin-bottom:12px;}
 .auth-input{width:100%;padding:12px 14px;background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .2s;}
+.pwwrap{position:relative;}
+.pweye{position:absolute;right:10px;top:13px;background:none;border:0;padding:0;cursor:pointer;font-size:15px;line-height:1;opacity:.55;}
+.pweye:hover{opacity:.95;}
 .auth-input:focus{border-color:var(--gold);}
 .auth-input::placeholder{color:rgba(255,255,255,.3);}
 .auth-submit{width:100%;padding:13px;background:linear-gradient(145deg,var(--gold),var(--gold-l));border:none;border-radius:8px;color:#1a1208;font-family:'Outfit',sans-serif;font-weight:600;font-size:14px;letter-spacing:.04em;cursor:pointer;margin-top:6px;transition:opacity .2s;}
@@ -131,7 +134,7 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
     <p class="intro">Geben Sie Ihre E-Mail und Ihr Passwort ein, um auf Ihre Portale zuzugreifen.</p>
     <form onsubmit="event.preventDefault();doLogin();return false;" autocomplete="on">
     <div class="auth-row"><input id="loginEmail" name="email" class="auth-input" type="email" placeholder="E-Mail" autocomplete="email" required></div>
-    <div class="auth-row"><input id="loginPass" name="password" class="auth-input" type="password" placeholder="Passwort" autocomplete="current-password" required></div>
+    <div class="auth-row"><div class="pwwrap"><input id="loginPass" name="password" class="auth-input" type="password" style="padding-right:38px" placeholder="Passwort" autocomplete="current-password" required><button type="button" class="pweye" onclick="togglePw('loginPass',this)" aria-label="Passwort anzeigen" tabindex="-1">👁</button></div></div>
     <button id="loginBtn" type="submit" class="auth-submit">Einloggen</button>
     </form>
     <div id="loginMsg" class="auth-msg"></div>
@@ -159,8 +162,8 @@ h1{font-family:'Cormorant Garamond',serif;font-size:clamp(28px,4vw,42px);font-we
   <div id="recoveryBox" class="auth-box">
     <h2>Neues Passwort setzen</h2>
     <p class="intro">Bitte geben Sie Ihr neues Passwort zweimal ein.</p>
-    <div class="auth-row"><input id="newPass1" class="auth-input" type="password" placeholder="Neues Passwort" autocomplete="new-password" required></div>
-    <div class="auth-row"><input id="newPass2" class="auth-input" type="password" placeholder="Passwort bestätigen" autocomplete="new-password" required></div>
+    <div class="auth-row"><div class="pwwrap"><input id="newPass1" class="auth-input" type="password" style="padding-right:38px" placeholder="Neues Passwort" autocomplete="new-password" required><button type="button" class="pweye" onclick="togglePw('newPass1',this)" aria-label="Passwort anzeigen" tabindex="-1">👁</button></div></div>
+    <div class="auth-row"><div class="pwwrap"><input id="newPass2" class="auth-input" type="password" style="padding-right:38px" placeholder="Passwort bestätigen" autocomplete="new-password" required><button type="button" class="pweye" onclick="togglePw('newPass2',this)" aria-label="Passwort anzeigen" tabindex="-1">👁</button></div></div>
     <button id="recoveryBtn" type="button" class="auth-submit" onclick="doRecovery()">Passwort speichern</button>
     <div id="recoveryMsg" class="auth-msg"></div>
     <div class="auth-links">
@@ -463,6 +466,7 @@ async function doLogin(){
   }
 }
 
+function togglePw(id,btn){const el=document.getElementById(id);const show=el.type==='password';el.type=show?'text':'password';btn.textContent=show?'🙈':'👁';btn.setAttribute('aria-label',show?'Passwort verbergen':'Passwort anzeigen');}
 async function doForgotPassword(){
   const email=document.getElementById('resetEmail').value.trim();
   const btn=document.getElementById('resetBtn');
