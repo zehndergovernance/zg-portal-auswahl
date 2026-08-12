@@ -340,7 +340,7 @@ function showResetBox(){
   hideAll();
   show('resetBox');
   clearMsg('resetMsg');
-  const e=document.getElementById('loginEmail').value.trim();
+  const e=document.getElementById('loginEmail').value.trim().toLowerCase();
   if(e) document.getElementById('resetEmail').value=e;
 }
 function showRecoveryForm(){
@@ -439,7 +439,7 @@ async function checkAccess(user){
 }
 
 async function doLogin(){
-  const email=document.getElementById('loginEmail').value.trim();
+  const email=document.getElementById('loginEmail').value.trim().toLowerCase();
   const password=document.getElementById('loginPass').value;
   const btn=document.getElementById('loginBtn');
   clearMsg('loginMsg');
@@ -468,7 +468,7 @@ async function doLogin(){
 
 function togglePw(id,btn){const el=document.getElementById(id);const show=el.type==='password';el.type=show?'text':'password';btn.textContent=show?'🙈':'👁';btn.setAttribute('aria-label',show?'Passwort verbergen':'Passwort anzeigen');}
 async function doForgotPassword(){
-  const email=document.getElementById('resetEmail').value.trim();
+  const email=document.getElementById('resetEmail').value.trim().toLowerCase();
   const btn=document.getElementById('resetBtn');
   clearMsg('resetMsg');
   if(!email){
